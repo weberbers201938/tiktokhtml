@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini TikTok</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #000; /* TikTok's background color */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 600px;
+      padding: 20px;
+      background-color: #000;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2rem;
+      color: #fff; /* Text color */
+    }
+
+    input[type="text"] {
+      width: 70%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #fff; /* Input field background color */
+    }
+
+    #searchButton {
+      padding: 10px 20px;
+      background-color: #ff385c; /* TikTok's primary color */
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      position: relative; /* Added position */
+    }
+
+    #searchButton:hover {
+      background-color: #ff1e43; /* TikTok's hover color */
+    }
+
+    #searchButton:disabled { /* Added disabled state */
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    #searchButton .loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 4px solid #fff;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    #videoContainer {
+      margin-top: 20px;
+      width: 100%;
+      position: relative;
+      padding-top: 56.25%; /* 16:9 aspect ratio */
+      overflow: hidden;
+      border-radius: 10px;
+      background-color: #000;
+      border: none; /* Removed border */
+    }
+
+    #videoContainer.withBorder {
+      border: 2px solid transparent; /* Transparent border */
+      animation: rainbowBorder 3s infinite alternate; /* Animated rainbow border */
+    }
+
+    #videoContainer iframe {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      border: none;
+      border-radius: 10px;
+    }
+
+    @keyframes rainbowBorder {
+      0% { border-color: #ff0000; } /* Red */
+      16% { border-color: #ff8000; } /* Orange */
+      33% { border-color: #ffff00; } /* Yellow */
+      50% { border-color: #00ff00; } /* Green */
+      66% { border-color: #0000ff; } /* Blue */
+      83% { border-color: #4b0082; } /* Indigo */
+      100% { border-color: #9400d3; } /* Violet */
+    }
+
+    #videoInfo {
+      text-align: left;
+      margin-top: 20px;
+      color: #fff; /* Text color */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mini TikTok</h1>
+    <input type="text" id="searchInput" placeholder="Enter search query...">
+    <button onclick="searchTikTok()" id="searchButton">Search<span class="loader" id="loader" style="display: none;"></span></button>
+    <div id="videoContainer"></div>
+    <div id="videoInfo"></div>
+  </div>
+  <script>
+    async function searchTikTok() {
+      const query = document.getElementById('searchInput').value;
+      const apiUrl = `http://65.109.58.118:26011/api/tiksearch?search=${query}`;
+
+      try {
+        const searchButton = document.getElementById('searchButton');
+        searchButton.disabled = true; // Disable button
+        document.getElementById('loader').style.display = 'inline-block'; // Show loader
+
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        if (data && data.data.videos[0]) {
+          const main = data.data.videos[0]
+          const videoRes = main.play;
+          const videoContainer = document.getElementById('videoContainer');
+          videoContainer.innerHTML = `<iframe src="${videoRes}" allowfullscreen></iframe>`;
+          videoContainer.classList.add('withBorder'); // Add class to show border
+
+          const videoInfo = document.getElementById('videoInfo');
+          videoInfo.innerHTML = `
+            <h2>Video Information</h2>
+            <p><strong>Title:</strong> ${main.title}</p>
+            <p><strong>Author of Music:</strong> ${main.music_info.author}</p>
+            <p><strong>Likes:</strong> ${main.digg_count}</p>
+            <p><strong>Comments:</strong> ${main.comment_count}</p>
+            <p><strong>Shares:</strong> ${main.share_count}</p>
+          `;
+        } else {
+          alert('No video found for the given query.');
+        }
+      } catch (error) {
+        console.error('Error fetching TikTok data:', error);
+        alert('Error fetching TikTok data. Please try again later.');
+      } finally {
+        const searchButton = document.getElementById('searchButton');
+        searchButton.disabled = false; // Enable button
+        document.getElementById('loader').style.display = 'none'; // Hide loader
+      }
+    }
+  </script>
+</body>
+</html>
